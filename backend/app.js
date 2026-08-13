@@ -6,10 +6,6 @@ const pool = require("./db");
 
 const app = express();
 
-// ========================================
-// MIDDLEWARE
-// ========================================
-
 app.use(
   cors({
     origin: true,
@@ -43,29 +39,26 @@ app.get("/health", async (req, res) => {
 });
 
 // ========================================
-// ROOT API
+// ROOT
 // ========================================
 
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Welcome to the BizLaunch API",
   });
 });
+
 // ========================================
-// 404 HANDLER
+// 404
 // ========================================
 
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "API route not found",
+    requestedPath: req.path,
   });
 });
 
-// ========================================
-// EXPORT APP
-// ========================================
-
 module.exports = app;
-
