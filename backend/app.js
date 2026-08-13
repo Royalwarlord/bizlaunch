@@ -19,7 +19,7 @@ app.use(express.json());
 // HEALTH CHECK
 // ========================================
 
-app.get("/health", async (req, res) => {
+app.get("/api/health", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
 
@@ -39,7 +39,7 @@ app.get("/health", async (req, res) => {
 });
 
 // ========================================
-// ROOT
+// ROOT API
 // ========================================
 
 app.get("/", (req, res) => {
@@ -50,7 +50,7 @@ app.get("/", (req, res) => {
 });
 
 // ========================================
-// 404
+// 404 HANDLER
 // ========================================
 
 app.use((req, res) => {
