@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const pool = require("./db");
+const authRoutes = require("./api/auth");
 
 const app = express();
 
@@ -14,6 +15,12 @@ app.use(
 );
 
 app.use(express.json());
+
+// ========================================
+// AUTHENTICATION ROUTES
+// ========================================
+
+app.use("/api/auth", authRoutes);
 
 // ========================================
 // HEALTH CHECK

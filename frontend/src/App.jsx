@@ -1,12 +1,21 @@
-function App() {
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+
+// ========================================
+// HOME PAGE
+// ========================================
+
+function Home() {
   return (
     <div className="app">
       {/* NAVBAR */}
       <header className="navbar">
         <div className="container nav-content">
-          <a href="/" className="logo">
+          <Link to="/" className="logo">
             Biz<span>Launch</span>
-          </a>
+          </Link>
 
           <nav className="nav-links">
             <a href="#how-it-works">How It Works</a>
@@ -15,13 +24,13 @@ function App() {
           </nav>
 
           <div className="nav-actions">
-            <a href="#" className="login-link">
+            <Link to="/login" className="login-link">
               Login
-            </a>
+            </Link>
 
-            <a href="#get-started" className="btn btn-primary">
+            <Link to="/register" className="btn btn-primary">
               Get Started
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -47,11 +56,17 @@ function App() {
               </p>
 
               <div className="hero-actions">
-                <a href="#get-started" className="btn btn-primary btn-large">
+                <Link
+                  to="/register"
+                  className="btn btn-primary btn-large"
+                >
                   Start Your Business
-                </a>
+                </Link>
 
-                <a href="#how-it-works" className="btn btn-secondary btn-large">
+                <a
+                  href="#how-it-works"
+                  className="btn btn-secondary btn-large"
+                >
                   See How It Works
                 </a>
               </div>
@@ -61,6 +76,7 @@ function App() {
               </div>
             </div>
 
+            {/* DASHBOARD PREVIEW */}
             <div className="hero-card">
               <div className="dashboard-preview">
                 <div className="preview-header">
@@ -76,7 +92,10 @@ function App() {
                 <div className="preview-body">
                   <div className="preview-welcome">
                     <small>BUSINESS DASHBOARD</small>
-                    <h3>Welcome back 👋</h3>
+
+                    <h3>
+                      Welcome back 👋
+                    </h3>
                   </div>
 
                   <div className="stats-grid">
@@ -121,7 +140,9 @@ function App() {
         <section className="section" id="features">
           <div className="container">
             <div className="section-heading">
-              <div className="eyebrow">EVERYTHING YOU NEED</div>
+              <div className="eyebrow">
+                EVERYTHING YOU NEED
+              </div>
 
               <h2>
                 Your business deserves
@@ -136,17 +157,29 @@ function App() {
 
             <div className="features-grid">
               <article className="feature-card">
-                <div className="feature-icon">01</div>
-                <h3>Professional Website</h3>
+                <div className="feature-icon">
+                  01
+                </div>
+
+                <h3>
+                  Professional Website
+                </h3>
+
                 <p>
-                  Give your business a modern website that customers can
-                  access from any device.
+                  Give your business a modern website that customers
+                  can access from any device.
                 </p>
               </article>
 
               <article className="feature-card">
-                <div className="feature-icon">02</div>
-                <h3>Products & Services</h3>
+                <div className="feature-icon">
+                  02
+                </div>
+
+                <h3>
+                  Products & Services
+                </h3>
+
                 <p>
                   Showcase what you offer with organized products,
                   services, prices and descriptions.
@@ -154,20 +187,32 @@ function App() {
               </article>
 
               <article className="feature-card">
-                <div className="feature-icon">03</div>
-                <h3>Customer Enquiries</h3>
+                <div className="feature-icon">
+                  03
+                </div>
+
+                <h3>
+                  Customer Enquiries
+                </h3>
+
                 <p>
-                  Make it easy for potential customers to contact your
-                  business and request information.
+                  Make it easy for potential customers to contact
+                  your business and request information.
                 </p>
               </article>
 
               <article className="feature-card">
-                <div className="feature-icon">04</div>
-                <h3>Business Analytics</h3>
+                <div className="feature-icon">
+                  04
+                </div>
+
+                <h3>
+                  Business Analytics
+                </h3>
+
                 <p>
-                  Understand how people interact with your website and
-                  discover opportunities to grow.
+                  Understand how people interact with your website
+                  and discover opportunities to grow.
                 </p>
               </article>
             </div>
@@ -175,10 +220,15 @@ function App() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="section section-dark" id="how-it-works">
+        <section
+          className="section section-dark"
+          id="how-it-works"
+        >
           <div className="container">
             <div className="section-heading light">
-              <div className="eyebrow">SIMPLE PROCESS</div>
+              <div className="eyebrow">
+                SIMPLE PROCESS
+              </div>
 
               <h2>
                 From idea to
@@ -188,27 +238,47 @@ function App() {
 
             <div className="steps-grid">
               <article className="step">
-                <div className="step-number">01</div>
-                <h3>Create your account</h3>
+                <div className="step-number">
+                  01
+                </div>
+
+                <h3>
+                  Create your account
+                </h3>
+
                 <p>
-                  Register your business and tell us about what you do.
+                  Register your business and tell us about what
+                  you do.
                 </p>
               </article>
 
               <article className="step">
-                <div className="step-number">02</div>
-                <h3>Build your presence</h3>
+                <div className="step-number">
+                  02
+                </div>
+
+                <h3>
+                  Build your presence
+                </h3>
+
                 <p>
-                  Add your business information, products, services and
-                  images.
+                  Add your business information, products,
+                  services and images.
                 </p>
               </article>
 
               <article className="step">
-                <div className="step-number">03</div>
-                <h3>Publish & grow</h3>
+                <div className="step-number">
+                  03
+                </div>
+
+                <h3>
+                  Publish & grow
+                </h3>
+
                 <p>
-                  Publish your website and start connecting with customers.
+                  Publish your website and start connecting
+                  with customers.
                 </p>
               </article>
             </div>
@@ -219,7 +289,9 @@ function App() {
         <section className="section" id="pricing">
           <div className="container">
             <div className="section-heading">
-              <div className="eyebrow">SIMPLE PRICING</div>
+              <div className="eyebrow">
+                SIMPLE PRICING
+              </div>
 
               <h2>
                 Start small.
@@ -227,13 +299,17 @@ function App() {
               </h2>
 
               <p>
-                Plans designed for businesses at different stages of growth.
+                Plans designed for businesses at different stages
+                of growth.
               </p>
             </div>
 
             <div className="pricing-grid">
               <article className="pricing-card">
-                <div className="pricing-name">Starter</div>
+                <div className="pricing-name">
+                  Starter
+                </div>
+
                 <div className="price">
                   <strong>Free</strong>
                 </div>
@@ -249,15 +325,22 @@ function App() {
                   <li>Customer contact</li>
                 </ul>
 
-                <a href="#get-started" className="btn btn-secondary">
+                <Link
+                  to="/register"
+                  className="btn btn-secondary"
+                >
                   Get Started
-                </a>
+                </Link>
               </article>
 
               <article className="pricing-card featured">
-                <div className="popular">MOST POPULAR</div>
+                <div className="popular">
+                  MOST POPULAR
+                </div>
 
-                <div className="pricing-name">Business</div>
+                <div className="pricing-name">
+                  Business
+                </div>
 
                 <div className="price">
                   <strong>KSh 999</strong>
@@ -276,13 +359,18 @@ function App() {
                   <li>More images & content</li>
                 </ul>
 
-                <a href="#get-started" className="btn btn-primary">
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                >
                   Choose Business
-                </a>
+                </Link>
               </article>
 
               <article className="pricing-card">
-                <div className="pricing-name">Professional</div>
+                <div className="pricing-name">
+                  Professional
+                </div>
 
                 <div className="price">
                   <strong>KSh 2,499</strong>
@@ -300,19 +388,27 @@ function App() {
                   <li>Priority support</li>
                 </ul>
 
-                <a href="#get-started" className="btn btn-secondary">
+                <Link
+                  to="/register"
+                  className="btn btn-secondary"
+                >
                   Go Professional
-                </a>
+                </Link>
               </article>
             </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="cta" id="get-started">
+        <section
+          className="cta"
+          id="get-started"
+        >
           <div className="container cta-content">
             <div>
-              <div className="eyebrow">READY TO START?</div>
+              <div className="eyebrow">
+                READY TO START?
+              </div>
 
               <h2>
                 Put your business
@@ -320,14 +416,17 @@ function App() {
               </h2>
 
               <p>
-                Build your online presence today and start reaching more
-                customers.
+                Build your online presence today and start reaching
+                more customers.
               </p>
             </div>
 
-            <a href="#" className="btn btn-light btn-large">
+            <Link
+              to="/register"
+              className="btn btn-light btn-large"
+            >
               Create Your Business
-            </a>
+            </Link>
           </div>
         </section>
       </main>
@@ -336,9 +435,9 @@ function App() {
       <footer className="footer">
         <div className="container footer-content">
           <div>
-            <a href="/" className="logo">
+            <Link to="/" className="logo">
               Biz<span>Launch</span>
-            </a>
+            </Link>
 
             <p>
               Helping businesses build a stronger digital presence.
@@ -349,7 +448,7 @@ function App() {
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#pricing">Pricing</a>
-            <a href="#">Contact</a>
+            <a href="#get-started">Get Started</a>
           </div>
 
           <div className="copyright">
@@ -358,6 +457,33 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// ========================================
+// APPLICATION ROUTES
+// ========================================
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+<Route
+  path="/dashboard"
+  element={<Dashboard />}
+/>
+
+        {/* Temporary login route */}
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
