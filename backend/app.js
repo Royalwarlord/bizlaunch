@@ -23,7 +23,7 @@ app.use(express.json());
 // HEALTH CHECK
 // ========================================
 
-app.get("/api/health", async (req, res) => {
+app.get("/health", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
 
@@ -52,7 +52,6 @@ app.get("/", (req, res) => {
     message: "Welcome to the BizLaunch API",
   });
 });
-
 // ========================================
 // 404 HANDLER
 // ========================================
@@ -69,3 +68,4 @@ app.use((req, res) => {
 // ========================================
 
 module.exports = app;
+
