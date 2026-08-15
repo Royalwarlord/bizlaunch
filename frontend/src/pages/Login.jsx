@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "../api";
 
 function Login() {
   const navigate = useNavigate();
@@ -28,25 +29,48 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
+      });
 
-      const data = await response.json();
+      // Read response as text first so an empty/non-JSON
+      // response doesn't cause "Unexpected end of JSON input".
+      const responseText = await response.text();
+
+      let data = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Invalid JSON response:", responseText);
+
+          throw new Error(
+            `Server returned an invalid response (${response.status})`
+          );
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(
+          data.message || `Login failed (${response.status})`
+        );
+      }
+
+      if (!data.token || !data.user) {
+        throw new Error("Login response is missing authentication data");
       }
 
       // Store authentication information
       localStorage.setItem("bizlaunch_token", data.token);
+
       localStorage.setItem(
         "bizlaunch_user",
         JSON.stringify(data.user)
@@ -55,7 +79,12 @@ function Login() {
       // Go to dashboard
       navigate("/dashboard");
     } catch (error) {
-      setError(error.message);
+      console.error("Login error:", error);
+
+      setError(
+        error.message ||
+          "Unable to connect to the server. Please try again."
+      );
     } finally {
       setLoading(false);
     }
