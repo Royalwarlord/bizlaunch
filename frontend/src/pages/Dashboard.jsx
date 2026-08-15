@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "../api";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ function Dashboard() {
         // ========================================
 
         const userResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/me`,
+          `${API_URL}/api/auth/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -45,11 +46,34 @@ function Dashboard() {
           }
         );
 
-        const userData = await userResponse.json();
+        const userText = await userResponse.text();
+
+        let userData = {};
+
+        if (userText) {
+          try {
+            userData = JSON.parse(userText);
+          } catch (error) {
+            console.error(
+              "Invalid /api/auth/me response:",
+              userText
+            );
+
+            throw new Error(
+              `Authentication server returned an invalid response (${userResponse.status})`
+            );
+          }
+        }
 
         if (!userResponse.ok) {
           throw new Error(
             userData.message || "Authentication failed"
+          );
+        }
+
+        if (!userData.success || !userData.user) {
+          throw new Error(
+            userData.message || "Unable to retrieve user"
           );
         }
 
@@ -65,7 +89,7 @@ function Dashboard() {
         // ========================================
 
         const profileResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/business/profile`,
+          `${API_URL}/api/business/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -73,7 +97,20 @@ function Dashboard() {
           }
         );
 
-        const profileData = await profileResponse.json();
+        const profileText = await profileResponse.text();
+
+        let profileData = {};
+
+        if (profileText) {
+          try {
+            profileData = JSON.parse(profileText);
+          } catch (error) {
+            console.error(
+              "Invalid business profile response:",
+              profileText
+            );
+          }
+        }
 
         console.log("Business profile:", profileData);
 
@@ -92,7 +129,7 @@ function Dashboard() {
         // ========================================
 
         const statsResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/dashboard/stats`,
+          `${API_URL}/api/dashboard/stats`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -100,9 +137,25 @@ function Dashboard() {
           }
         );
 
-        const statsData = await statsResponse.json();
+        const statsText = await statsResponse.text();
 
-        console.log("Dashboard statistics:", statsData);
+        let statsData = {};
+
+        if (statsText) {
+          try {
+            statsData = JSON.parse(statsText);
+          } catch (error) {
+            console.error(
+              "Invalid dashboard statistics response:",
+              statsText
+            );
+          }
+        }
+
+        console.log(
+          "Dashboard statistics:",
+          statsData
+        );
 
         if (
           statsResponse.ok &&
@@ -189,13 +242,9 @@ function Dashboard() {
 
   return (
     <main className="dashboard-page">
-
-      {/* ========================================
-          HEADER
-      ======================================== */}
+      {/* HEADER */}
 
       <header className="dashboard-header">
-
         <div className="dashboard-brand">
           Biz<span>Launch</span>
         </div>
@@ -207,23 +256,15 @@ function Dashboard() {
         >
           Logout
         </button>
-
       </header>
 
-      {/* ========================================
-          CONTENT
-      ======================================== */}
+      {/* CONTENT */}
 
       <div className="dashboard-container">
-
-        {/* ========================================
-            WELCOME
-        ======================================== */}
+        {/* WELCOME */}
 
         <section className="dashboard-welcome">
-
           <div>
-
             <p className="dashboard-label">
               BUSINESS DASHBOARD
             </p>
@@ -236,19 +277,13 @@ function Dashboard() {
               Manage your business and grow your online
               presence from one place.
             </p>
-
           </div>
-
         </section>
 
-        {/* ========================================
-            DASHBOARD STATISTICS
-        ======================================== */}
+        {/* STATISTICS */}
 
         <section className="dashboard-stats">
-
           <article className="dashboard-stat-card">
-
             <div className="dashboard-stat-icon">
               P
             </div>
@@ -260,11 +295,9 @@ function Dashboard() {
                 {stats.totalProducts}
               </strong>
             </div>
-
           </article>
 
           <article className="dashboard-stat-card">
-
             <div className="dashboard-stat-icon">
               ✓
             </div>
@@ -276,11 +309,9 @@ function Dashboard() {
                 {stats.availableProducts}
               </strong>
             </div>
-
           </article>
 
           <article className="dashboard-stat-card">
-
             <div className="dashboard-stat-icon">
               E
             </div>
@@ -292,11 +323,9 @@ function Dashboard() {
                 {stats.totalEnquiries}
               </strong>
             </div>
-
           </article>
 
           <article className="dashboard-stat-card">
-
             <div className="dashboard-stat-icon">
               !
             </div>
@@ -308,17 +337,12 @@ function Dashboard() {
                 {stats.newEnquiries}
               </strong>
             </div>
-
           </article>
-
         </section>
 
-        {/* ========================================
-            BUSINESS PROFILE
-        ======================================== */}
+        {/* BUSINESS PROFILE */}
 
         {profile ? (
-
           <section
             className="dashboard-business-summary"
             style={{
@@ -335,9 +359,6 @@ function Dashboard() {
               flexWrap: "wrap",
             }}
           >
-
-            {/* BUSINESS INFORMATION */}
-
             <div
               style={{
                 display: "flex",
@@ -345,11 +366,7 @@ function Dashboard() {
                 gap: "18px",
               }}
             >
-
-              {/* LOGO */}
-
               {profile.logo_url ? (
-
                 <img
                   src={profile.logo_url}
                   alt={`${profile.business_name} logo`}
@@ -362,9 +379,7 @@ function Dashboard() {
                       "1px solid #e5e7eb",
                   }}
                 />
-
               ) : (
-
                 <div
                   style={{
                     width: "72px",
@@ -383,33 +398,23 @@ function Dashboard() {
                         .toUpperCase()
                     : "B"}
                 </div>
-
               )}
 
-              {/* TEXT */}
-
               <div>
-
                 <p
                   style={{
                     margin: 0,
                     fontSize: "13px",
                     fontWeight: "700",
-                    letterSpacing:
-                      "0.08em",
-                    textTransform:
-                      "uppercase",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
                     opacity: 0.6,
                   }}
                 >
                   Your Business
                 </p>
 
-                <h2
-                  style={{
-                    margin: "5px 0",
-                  }}
-                >
+                <h2 style={{ margin: "5px 0" }}>
                   {profile.business_name}
                 </h2>
 
@@ -423,12 +428,8 @@ function Dashboard() {
                     {profile.business_type}
                   </p>
                 )}
-
               </div>
-
             </div>
-
-            {/* BUTTONS */}
 
             <div
               style={{
@@ -437,7 +438,6 @@ function Dashboard() {
                 flexWrap: "wrap",
               }}
             >
-
               <Link
                 to="/business-profile"
                 className="dashboard-card-button"
@@ -446,26 +446,16 @@ function Dashboard() {
               </Link>
 
               {profile.slug && (
-
                 <Link
                   to={`/business/${profile.slug}`}
                   className="dashboard-card-button"
                 >
                   View Public Profile
                 </Link>
-
               )}
-
             </div>
-
           </section>
-
         ) : (
-
-          /* ========================================
-             NO PROFILE
-          ======================================== */
-
           <section
             style={{
               marginBottom: "30px",
@@ -476,7 +466,6 @@ function Dashboard() {
                 "0 10px 30px rgba(0,0,0,0.08)",
             }}
           >
-
             <h2>
               Set up your business profile
             </h2>
@@ -492,28 +481,18 @@ function Dashboard() {
             >
               Create Business Profile
             </Link>
-
           </section>
-
         )}
 
-        {/* ========================================
-            DASHBOARD CARDS
-        ======================================== */}
+        {/* DASHBOARD CARDS */}
 
         <section className="dashboard-grid">
-
-          {/* PROFILE */}
-
           <article className="dashboard-card">
-
             <div className="dashboard-card-icon">
               B
             </div>
 
-            <h2>
-              Business Profile
-            </h2>
+            <h2>Business Profile</h2>
 
             <p>
               {profile
@@ -527,20 +506,14 @@ function Dashboard() {
             >
               Manage Profile
             </Link>
-
           </article>
 
-          {/* PRODUCTS */}
-
           <article className="dashboard-card">
-
             <div className="dashboard-card-icon">
               P
             </div>
 
-            <h2>
-              Products & Services
-            </h2>
+            <h2>Products & Services</h2>
 
             <p>
               Showcase what your business offers
@@ -553,20 +526,14 @@ function Dashboard() {
             >
               Manage Products
             </Link>
-
           </article>
 
-          {/* CUSTOMERS */}
-
           <article className="dashboard-card">
-
             <div className="dashboard-card-icon">
               C
             </div>
 
-            <h2>
-              Customers
-            </h2>
+            <h2>Customers</h2>
 
             <p>
               View and manage customer enquiries.
@@ -578,20 +545,14 @@ function Dashboard() {
             >
               View Enquiries
             </Link>
-
           </article>
 
-          {/* ANALYTICS */}
-
           <article className="dashboard-card">
-
             <div className="dashboard-card-icon">
               A
             </div>
 
-            <h2>
-              Analytics
-            </h2>
+            <h2>Analytics</h2>
 
             <p>
               Track visitors and understand your
@@ -599,18 +560,14 @@ function Dashboard() {
             </p>
 
             <Link
-  to="/analytics"
-  className="dashboard-card-button"
->
-  View Analytics
-</Link>
-
+              to="/analytics"
+              className="dashboard-card-button"
+            >
+              View Analytics
+            </Link>
           </article>
-
         </section>
-
       </div>
-
     </main>
   );
 }
