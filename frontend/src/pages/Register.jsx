@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "../api";
 
 function Register() {
   const navigate = useNavigate();
@@ -34,29 +35,68 @@ function Register() {
 
     try {
       const response = await fetch(
-  `${import.meta.env.VITE_API_URL}/api/auth/register`,
+        `${API_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            businessName: formData.businessName.trim(),
+            businessType: formData.businessType.trim(),
+          }),
         }
       );
 
-      const data = await response.json();
+      // Read the response safely.
+      const responseText = await response.text();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Unable to create account");
+      let data = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Invalid JSON response from registration API:",
+            responseText
+          );
+
+          throw new Error(
+            `Server returned an invalid response (${response.status})`
+          );
+        }
       }
 
-      setSuccess("Account created successfully!");
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Unable to create account (${response.status})`
+        );
+      }
+
+      if (!data.success) {
+        throw new Error(
+          data.message || "Unable to create account"
+        );
+      }
+
+      setSuccess(
+        "Account created successfully! Redirecting to login..."
+      );
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 1200);
     } catch (error) {
-      setError(error.message);
+      console.error("Registration error:", error);
+
+      setError(
+        error.message ||
+          "Unable to connect to the server. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -103,6 +143,7 @@ function Register() {
               value={formData.name}
               onChange={handleChange}
               required
+              autoComplete="name"
             />
           </div>
 
@@ -119,6 +160,7 @@ function Register() {
               value={formData.email}
               onChange={handleChange}
               required
+              autoComplete="email"
             />
           </div>
 
@@ -134,8 +176,9 @@ function Register() {
               placeholder="At least 6 characters"
               value={formData.password}
               onChange={handleChange}
-              minLength="6"
+              minLength={6}
               required
+              autoComplete="new-password"
             />
           </div>
 
@@ -208,7 +251,9 @@ function Register() {
             className="btn btn-primary auth-submit"
             disabled={loading}
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {loading
+              ? "Creating account..."
+              : "Create Account"}
           </button>
         </form>
 
