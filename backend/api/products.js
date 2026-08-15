@@ -43,6 +43,8 @@ async function getBusiness(userId) {
 // ========================================
 // GET PUBLIC PRODUCTS
 // ========================================
+// PUBLIC
+// ========================================
 
 router.get("/public", async (req, res) => {
   try {
@@ -121,6 +123,57 @@ router.get("/", async (req, res) => {
 });
 
 // ========================================
+// GET CURRENT USER'S PRODUCTS
+// AUTHENTICATION REQUIRED
+// ========================================
+
+router.get("/mine", authenticateToken, async (req, res) => {
+  try {
+    const business = await getBusiness(req.user.userId);
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business profile not found",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        business_id,
+        name,
+        slug,
+        description,
+        price,
+        category,
+        image_url,
+        is_available,
+        created_at,
+        updated_at
+      FROM products
+      WHERE business_id = $1
+      ORDER BY created_at DESC
+      `,
+      [business.id]
+    );
+
+    res.status(200).json({
+      success: true,
+      products: result.rows,
+    });
+  } catch (error) {
+    console.error("Get business products error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to retrieve your products",
+    });
+  }
+});
+
+// ========================================
 // CREATE PRODUCT
 // AUTHENTICATION REQUIRED
 // ========================================
@@ -136,12 +189,20 @@ router.post("/", authenticateToken, async (req, res) => {
       isAvailable,
     } = req.body;
 
+    // ========================================
+    // VALIDATE NAME
+    // ========================================
+
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: "Product name is required",
       });
     }
+
+    // ========================================
+    // GET USER BUSINESS
+    // ========================================
 
     const business = await getBusiness(req.user.userId);
 
@@ -152,7 +213,15 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
+    // ========================================
+    // CREATE SLUG
+    // ========================================
+
     const slug = createSlug(name);
+
+    // ========================================
+    // INSERT PRODUCT
+    // ========================================
 
     const result = await pool.query(
       `
@@ -207,6 +276,10 @@ router.put("/:id", authenticateToken, async (req, res) => {
   try {
     const productId = Number(req.params.id);
 
+    // ========================================
+    // VALIDATE PRODUCT ID
+    // ========================================
+
     if (!Number.isInteger(productId)) {
       return res.status(400).json({
         success: false,
@@ -223,12 +296,20 @@ router.put("/:id", authenticateToken, async (req, res) => {
       isAvailable,
     } = req.body;
 
+    // ========================================
+    // VALIDATE NAME
+    // ========================================
+
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: "Product name is required",
       });
     }
+
+    // ========================================
+    // GET USER BUSINESS
+    // ========================================
 
     const business = await getBusiness(req.user.userId);
 
@@ -239,7 +320,15 @@ router.put("/:id", authenticateToken, async (req, res) => {
       });
     }
 
+    // ========================================
+    // CREATE NEW SLUG
+    // ========================================
+
     const slug = createSlug(name);
+
+    // ========================================
+    // UPDATE ONLY USER'S PRODUCT
+    // ========================================
 
     const result = await pool.query(
       `
@@ -272,6 +361,10 @@ router.put("/:id", authenticateToken, async (req, res) => {
       ]
     );
 
+    // ========================================
+    // PRODUCT NOT FOUND
+    // ========================================
+
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
@@ -303,12 +396,20 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const productId = Number(req.params.id);
 
+    // ========================================
+    // VALIDATE PRODUCT ID
+    // ========================================
+
     if (!Number.isInteger(productId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid product ID",
       });
     }
+
+    // ========================================
+    // GET USER BUSINESS
+    // ========================================
 
     const business = await getBusiness(req.user.userId);
 
@@ -319,6 +420,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       });
     }
 
+    // ========================================
+    // DELETE ONLY USER'S PRODUCT
+    // ========================================
+
     const result = await pool.query(
       `
       DELETE FROM products
@@ -328,6 +433,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       `,
       [productId, business.id]
     );
+
+    // ========================================
+    // PRODUCT NOT FOUND
+    // ========================================
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -349,5 +458,9 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     });
   }
 });
+
+// ========================================
+// EXPORT ROUTER
+// ========================================
 
 module.exports = router;
