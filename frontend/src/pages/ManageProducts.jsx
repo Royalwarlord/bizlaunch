@@ -30,7 +30,7 @@ function ManageProducts() {
   });
 
   // ========================================
-  // LOAD PRODUCTS
+  // LOAD CURRENT USER'S PRODUCTS
   // ========================================
 
   const loadProducts = async () => {
@@ -38,16 +38,21 @@ function ManageProducts() {
       setLoading(true);
       setError("");
 
-      const token = localStorage.getItem("bizlaunch_token");
+      const token =
+        localStorage.getItem("bizlaunch_token");
 
       if (!token) {
         navigate("/login", { replace: true });
         return;
       }
 
+      // IMPORTANT:
+      // /mine returns ONLY products belonging
+      // to the logged-in user's business.
       const response = await fetch(
-        `${API_URL}/api/products`,
+        `${API_URL}/api/products/mine`,
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -58,15 +63,21 @@ function ManageProducts() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Unable to load products"
+          data.message ||
+            "Unable to load your products"
         );
       }
 
       setProducts(data.products || []);
     } catch (err) {
-      console.error("Load products error:", err);
+      console.error(
+        "Load products error:",
+        err
+      );
+
       setError(
-        err.message || "Unable to load products."
+        err.message ||
+          "Unable to load products."
       );
     } finally {
       setLoading(false);
@@ -82,7 +93,12 @@ function ManageProducts() {
   // ========================================
 
   const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = event.target;
 
     setForm((current) => ({
       ...current,
@@ -98,7 +114,8 @@ function ManageProducts() {
   // ========================================
 
   const handleImageChange = (event) => {
-    const file = event.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
     if (!file) {
       return;
@@ -120,215 +137,258 @@ function ManageProducts() {
       return;
     }
 
-   if (file.size > 25 * 1024 * 1024) {
-  setError(
-    "Image must be smaller than 25 MB."
-  );
+    if (
+      file.size >
+      25 * 1024 * 1024
+    ) {
+      setError(
+        "Image must be smaller than 25 MB."
+      );
 
-  event.target.value = "";
-  return;
-}
+      event.target.value = "";
+      return;
+    }
+
     setError("");
     setImageFile(file);
 
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl =
+      URL.createObjectURL(file);
+
     setImagePreview(previewUrl);
   };
 
   // ========================================
-// COMPRESS IMAGE BEFORE UPLOAD
-// ========================================
+  // COMPRESS IMAGE BEFORE UPLOAD
+  // ========================================
 
-const compressImage = (file) => {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
+  const compressImage = (file) => {
+    return new Promise(
+      (resolve, reject) => {
+        const image =
+          new Image();
 
-    const reader = new FileReader();
+        const reader =
+          new FileReader();
 
-    reader.onload = (event) => {
-      image.src = event.target.result;
-    };
+        reader.onload = (event) => {
+          image.src =
+            event.target.result;
+        };
 
-    reader.onerror = () => {
-      reject(
-        new Error("Unable to read the selected image.")
-      );
-    };
+        reader.onerror = () => {
+          reject(
+            new Error(
+              "Unable to read the selected image."
+            )
+          );
+        };
 
-    image.onload = () => {
-      const MAX_WIDTH = 1600;
-      const MAX_HEIGHT = 1600;
+        image.onload = () => {
+          const MAX_WIDTH = 1600;
+          const MAX_HEIGHT = 1600;
 
-      let width = image.width;
-      let height = image.height;
+          let width =
+            image.width;
 
-      // Resize while keeping aspect ratio
-      if (
-        width > MAX_WIDTH ||
-        height > MAX_HEIGHT
-      ) {
-        const widthRatio =
-          MAX_WIDTH / width;
+          let height =
+            image.height;
 
-        const heightRatio =
-          MAX_HEIGHT / height;
+          if (
+            width > MAX_WIDTH ||
+            height > MAX_HEIGHT
+          ) {
+            const widthRatio =
+              MAX_WIDTH /
+              width;
 
-        const ratio = Math.min(
-          widthRatio,
-          heightRatio
-        );
+            const heightRatio =
+              MAX_HEIGHT /
+              height;
 
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
+            const ratio =
+              Math.min(
+                widthRatio,
+                heightRatio
+              );
 
-      const canvas =
-        document.createElement("canvas");
+            width =
+              Math.round(
+                width * ratio
+              );
 
-      canvas.width = width;
-      canvas.height = height;
-
-      const context =
-        canvas.getContext("2d");
-
-      context.drawImage(
-        image,
-        0,
-        0,
-        width,
-        height
-      );
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(
-              new Error(
-                "Unable to compress image."
-              )
-            );
-            return;
+            height =
+              Math.round(
+                height * ratio
+              );
           }
 
-          const compressedFile =
-            new File(
-              [blob],
-              file.name.replace(
-                /\.[^/.]+$/,
-                ".jpg"
-              ),
-              {
-                type: "image/jpeg",
-                lastModified:
-                  Date.now(),
-              }
+          const canvas =
+            document.createElement(
+              "canvas"
             );
 
-          resolve(compressedFile);
-        },
-        "image/jpeg",
-        0.82
-      );
-    };
+          canvas.width =
+            width;
 
-    image.onerror = () => {
-      reject(
-        new Error(
-          "Unable to process this image."
-        )
-      );
-    };
+          canvas.height =
+            height;
 
-    reader.readAsDataURL(file);
-  });
-};
+          const context =
+            canvas.getContext(
+              "2d"
+            );
+
+          context.drawImage(
+            image,
+            0,
+            0,
+            width,
+            height
+          );
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(
+                  new Error(
+                    "Unable to compress image."
+                  )
+                );
+
+                return;
+              }
+
+              const compressedFile =
+                new File(
+                  [blob],
+                  file.name.replace(
+                    /\.[^/.]+$/,
+                    ".jpg"
+                  ),
+                  {
+                    type:
+                      "image/jpeg",
+                    lastModified:
+                      Date.now(),
+                  }
+                );
+
+              resolve(
+                compressedFile
+              );
+            },
+            "image/jpeg",
+            0.82
+          );
+        };
+
+        image.onerror = () => {
+          reject(
+            new Error(
+              "Unable to process this image."
+            )
+          );
+        };
+
+        reader.readAsDataURL(
+          file
+        );
+      }
+    );
+  };
 
   // ========================================
   // UPLOAD IMAGE TO CLOUDINARY
   // ========================================
 
   const uploadImage = async () => {
-  if (!imageFile) {
-    return form.imageUrl || "";
-  }
+    if (!imageFile) {
+      return form.imageUrl || "";
+    }
 
-  const token =
-    localStorage.getItem("bizlaunch_token");
+    const token =
+      localStorage.getItem(
+        "bizlaunch_token"
+      );
 
-  if (!token) {
-    throw new Error(
-      "Authentication token not found. Please log in again."
-    );
-  }
+    if (!token) {
+      throw new Error(
+        "Authentication token not found. Please log in again."
+      );
+    }
 
-  try {
-    setUploading(true);
+    try {
+      setUploading(true);
 
-    // Compress image before sending to Cloudinary
-    const compressedFile =
-      await compressImage(imageFile);
+      const compressedFile =
+        await compressImage(
+          imageFile
+        );
 
-    console.log(
-      "Original image:",
-      (
-        imageFile.size /
-        1024 /
-        1024
-      ).toFixed(2),
-      "MB"
-    );
+      console.log(
+        "Original image:",
+        (
+          imageFile.size /
+          1024 /
+          1024
+        ).toFixed(2),
+        "MB"
+      );
 
-    console.log(
-      "Compressed image:",
-      (
-        compressedFile.size /
-        1024 /
-        1024
-      ).toFixed(2),
-      "MB"
-    );
+      console.log(
+        "Compressed image:",
+        (
+          compressedFile.size /
+          1024 /
+          1024
+        ).toFixed(2),
+        "MB"
+      );
 
-    const formData = new FormData();
+      const formData =
+        new FormData();
 
-    formData.append(
-      "image",
-      compressedFile
-    );
+      formData.append(
+        "image",
+        compressedFile
+      );
 
-    const response = await fetch(
-      `${API_URL}/api/upload/image`,
-      {
-        method: "POST",
+      const response =
+        await fetch(
+          `${API_URL}/api/upload/image`,
+          {
+            method: "POST",
 
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
 
-        body: formData,
+            body: formData,
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Image upload failed."
+        );
       }
-    );
 
-    const data =
-      await response.json();
+      if (!data.imageUrl) {
+        throw new Error(
+          "Cloudinary did not return an image URL."
+        );
+      }
 
-    if (!response.ok) {
-      throw new Error(
-        data.message ||
-          "Image upload failed."
-      );
+      return data.imageUrl;
+    } finally {
+      setUploading(false);
     }
-
-    if (!data.imageUrl) {
-      throw new Error(
-        "Cloudinary did not return an image URL."
-      );
-    }
-
-    return data.imageUrl;
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
   // ========================================
   // RESET FORM
@@ -349,7 +409,9 @@ const compressImage = (file) => {
     setEditingId(null);
 
     const fileInput =
-      document.getElementById("product-image");
+      document.getElementById(
+        "product-image"
+      );
 
     if (fileInput) {
       fileInput.value = "";
@@ -360,7 +422,9 @@ const compressImage = (file) => {
   // ADD / UPDATE PRODUCT
   // ========================================
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (
+    event
+  ) => {
     event.preventDefault();
 
     setError("");
@@ -369,10 +433,15 @@ const compressImage = (file) => {
 
     try {
       const token =
-        localStorage.getItem("bizlaunch_token");
+        localStorage.getItem(
+          "bizlaunch_token"
+        );
 
       if (!token) {
-        navigate("/login", { replace: true });
+        navigate("/login", {
+          replace: true,
+        });
+
         return;
       }
 
@@ -382,12 +451,21 @@ const compressImage = (file) => {
         );
       }
 
-      // Upload image first
-      let imageUrl = form.imageUrl;
+      // ========================================
+      // UPLOAD IMAGE FIRST
+      // ========================================
+
+      let imageUrl =
+        form.imageUrl;
 
       if (imageFile) {
-        imageUrl = await uploadImage();
+        imageUrl =
+          await uploadImage();
       }
+
+      // ========================================
+      // DETERMINE REQUEST
+      // ========================================
 
       const url = editingId
         ? `${API_URL}/api/products/${editingId}`
@@ -397,23 +475,37 @@ const compressImage = (file) => {
         ? "PUT"
         : "POST";
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: form.name,
-          description: form.description,
-          price: form.price,
-          category: form.category,
-          imageUrl,
-          isAvailable: form.isAvailable,
-        }),
-      });
+      // ========================================
+      // SAVE PRODUCT
+      // ========================================
 
-      const data = await response.json();
+      const response =
+        await fetch(url, {
+          method,
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            name: form.name,
+            description:
+              form.description,
+            price: form.price,
+            category:
+              form.category,
+            imageUrl,
+            isAvailable:
+              form.isAvailable,
+          }),
+        });
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -450,26 +542,43 @@ const compressImage = (file) => {
   // EDIT PRODUCT
   // ========================================
 
-  const handleEdit = (product) => {
-    setEditingId(product.id);
+  const handleEdit = (
+    product
+  ) => {
+    setEditingId(
+      product.id
+    );
 
     setForm({
-      name: product.name || "",
+      name:
+        product.name || "",
+
       description:
-        product.description || "",
+        product.description ||
+        "",
+
       price:
-        product.price ?? "",
+        product.price ??
+        "",
+
       category:
-        product.category || "",
+        product.category ||
+        "",
+
       imageUrl:
-        product.image_url || "",
+        product.image_url ||
+        "",
+
       isAvailable:
-        product.is_available !== false,
+        product.is_available !==
+        false,
     });
 
     setImageFile(null);
+
     setImagePreview(
-      product.image_url || ""
+      product.image_url ||
+        ""
     );
 
     setError("");
@@ -485,7 +594,9 @@ const compressImage = (file) => {
   // DELETE PRODUCT
   // ========================================
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (
+    id
+  ) => {
     const confirmed =
       window.confirm(
         "Are you sure you want to delete this product?"
@@ -508,18 +619,22 @@ const compressImage = (file) => {
         navigate("/login", {
           replace: true,
         });
+
         return;
       }
 
-      const response = await fetch(
-        `${API_URL}/api/products/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response =
+        await fetch(
+          `${API_URL}/api/products/${id}`,
+          {
+            method: "DELETE",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
       const data =
         await response.json();
@@ -558,9 +673,14 @@ const compressImage = (file) => {
       <main className="dashboard-page">
         <div
           style={{
-            minHeight: "100vh",
-            display: "grid",
-            placeItems: "center",
+            minHeight:
+              "100vh",
+
+            display:
+              "grid",
+
+            placeItems:
+              "center",
           }}
         >
           <p>
@@ -576,518 +696,687 @@ const compressImage = (file) => {
   // ========================================
 
   return (
-  <main className="dashboard-page products-management-page">
+    <main className="dashboard-page products-management-page">
 
-    {/* HEADER */}
-    <header className="dashboard-header">
-      <div className="dashboard-brand">
-        Biz<span>Launch</span>
-      </div>
+      {/* HEADER */}
 
-      <Link
-        to="/dashboard"
-        className="dashboard-logout"
-      >
-        ← Back to Dashboard
-      </Link>
-    </header>
+      <header className="dashboard-header">
 
-    <div className="dashboard-container">
-
-      {/* PAGE HEADER */}
-      <section className="products-hero">
-
-        <div className="products-hero-content">
-          <span className="products-eyebrow">
-            PRODUCT MANAGEMENT
-          </span>
-
-          <h1>
-            Products <span>& Services</span>
-          </h1>
-
-          <p>
-            Add, organize and showcase everything
-            your business offers to customers.
-          </p>
+        <div className="dashboard-brand">
+          Biz<span>Launch</span>
         </div>
 
         <Link
-          to="/products"
-          className="products-public-button"
+          to="/dashboard"
+          className="dashboard-logout"
         >
-          👁 View Public Products
+          ← Back to Dashboard
         </Link>
 
-      </section>
+      </header>
 
-      {/* ALERTS */}
-      {error && (
-        <div className="product-alert product-alert-error">
-          <span>⚠️</span>
-          <div>
-            <strong>Something went wrong</strong>
-            <p>{error}</p>
-          </div>
-        </div>
-      )}
+      <div className="dashboard-container">
 
-      {success && (
-        <div className="product-alert product-alert-success">
-          <span>✓</span>
-          <div>
-            <strong>Success</strong>
-            <p>{success}</p>
-          </div>
-        </div>
-      )}
+        {/* PAGE HEADER */}
 
-      {/* FORM */}
-      <section className="product-form-card">
+        <section className="products-hero">
 
-        <div className="product-form-header">
+          <div className="products-hero-content">
 
-          <div>
-            <span className="form-section-label">
-              {editingId
-                ? "UPDATE LISTING"
-                : "NEW LISTING"}
-            </span>
-
-            <h2>
-              {editingId
-                ? "Edit Product"
-                : "Add New Product"}
-            </h2>
-
-            <p>
-              Add clear information and a quality
-              image to attract customers.
-            </p>
-          </div>
-
-          <div className="product-form-icon">
-            {editingId ? "✎" : "+"}
-          </div>
-
-        </div>
-
-        <form onSubmit={handleSubmit}>
-
-          {/* BASIC INFORMATION */}
-          <div className="product-form-section">
-
-            <div className="form-section-title">
-              <span>01</span>
-              <div>
-                <h3>Basic Information</h3>
-                <p>Tell customers about your product.</p>
-              </div>
-            </div>
-
-            <div className="product-form-grid">
-
-              {/* NAME */}
-              <div className="form-field form-field-large">
-                <label htmlFor="product-name">
-                  Product Name
-                  <span>*</span>
-                </label>
-
-                <input
-                  id="product-name"
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Premium Mattress"
-                  required
-                />
-              </div>
-
-              {/* CATEGORY */}
-              <div className="form-field">
-                <label htmlFor="product-category">
-                  Category
-                </label>
-
-                <input
-                  id="product-category"
-                  type="text"
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  placeholder="e.g. Mattresses"
-                />
-              </div>
-
-              {/* PRICE */}
-              <div className="form-field">
-                <label htmlFor="product-price">
-                  Price
-                </label>
-
-                <div className="price-input">
-                  <span>KSh</span>
-
-                  <input
-                    id="product-price"
-                    type="number"
-                    name="price"
-                    value={form.price}
-                    onChange={handleChange}
-                    placeholder="15,000"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            {/* DESCRIPTION */}
-            <div className="form-field product-description-field">
-
-              <label htmlFor="product-description">
-                Description
-              </label>
-
-              <textarea
-                id="product-description"
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Describe your product, its features, benefits, size, materials, warranty..."
-                rows="5"
-              />
-
-              <small>
-                Give customers enough information to
-                understand what you are offering.
-              </small>
-
-            </div>
-
-          </div>
-
-          {/* IMAGE SECTION */}
-          <div className="product-form-section">
-
-            <div className="form-section-title">
-              <span>02</span>
-              <div>
-                <h3>Product Image</h3>
-                <p>
-                  A good image makes your product stand out.
-                </p>
-              </div>
-            </div>
-
-            <div className="product-upload-layout">
-
-              {/* UPLOAD BOX */}
-              <label
-                htmlFor="product-image"
-                className="product-upload-box"
-              >
-
-                <input
-                  id="product-image"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={handleImageChange}
-                />
-
-                <div className="upload-icon">
-                  ↑
-                </div>
-
-                <strong>
-                  Click to upload product image
-                </strong>
-
-                <span>
-                  JPG, PNG, WEBP or GIF
-                </span>
-
-                <small>
-                  Images are automatically optimized
-                  before upload.
-                </small>
-
-              </label>
-
-              {/* PREVIEW */}
-              <div className="product-preview-box">
-
-                {imagePreview ? (
-                  <>
-                    <div className="preview-label">
-                      IMAGE PREVIEW
-                    </div>
-
-                    <div className="product-preview-image">
-                      <img
-                        src={imagePreview}
-                        alt="Product preview"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="preview-empty">
-                    <div>🖼️</div>
-                    <strong>No image selected</strong>
-                    <span>
-                      Your product preview will appear here.
-                    </span>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-
-            <p className="upload-note">
-              Maximum upload size: 25 MB.
-              Your image will be compressed automatically.
-            </p>
-
-          </div>
-
-          {/* AVAILABILITY */}
-          <div className="product-form-section availability-section">
-
-            <div className="form-section-title">
-              <span>03</span>
-              <div>
-                <h3>Product Availability</h3>
-                <p>
-                  Control whether customers can see this product.
-                </p>
-              </div>
-            </div>
-
-            <label className="availability-toggle">
-
-              <input
-                type="checkbox"
-                id="isAvailable"
-                name="isAvailable"
-                checked={form.isAvailable}
-                onChange={handleChange}
-              />
-
-              <span className="toggle-slider"></span>
-
-              <div>
-                <strong>
-                  Product is available
-                </strong>
-
-                <small>
-                  Customers can view this product
-                  on your public business page.
-                </small>
-              </div>
-
-            </label>
-
-          </div>
-
-          {/* ACTIONS */}
-          <div className="product-form-actions">
-
-            <button
-              type="submit"
-              className="product-primary-button"
-              disabled={saving || uploading}
-            >
-              {uploading
-                ? "↑ Uploading image..."
-                : saving
-                ? "Saving..."
-                : editingId
-                ? "✓ Update Product"
-                : "+ Add Product"}
-            </button>
-
-            {editingId && (
-              <button
-                type="button"
-                className="product-secondary-button"
-                onClick={resetForm}
-              >
-                Cancel Edit
-              </button>
-            )}
-
-          </div>
-
-        </form>
-      </section>
-
-      {/* PRODUCTS */}
-      <section className="products-list-section">
-
-        <div className="products-list-header">
-
-          <div>
             <span className="products-eyebrow">
-              YOUR INVENTORY
+              PRODUCT MANAGEMENT
             </span>
 
-            <h2>Your Products</h2>
+            <h1>
+              Products{" "}
+              <span>& Services</span>
+            </h1>
 
             <p>
-              Manage the products currently listed
-              for your business.
+              Add, organize and showcase
+              everything your business
+              offers to customers.
             </p>
+
           </div>
 
-          <div className="product-count">
-            <strong>{products.length}</strong>
-            <span>
-              {products.length === 1
-                ? "Product"
-                : "Products"}
-            </span>
-          </div>
+          <Link
+            to="/products"
+            className="products-public-button"
+          >
+            👁 View Public Products
+          </Link>
 
-        </div>
+        </section>
 
-        {products.length === 0 ? (
+        {/* ALERTS */}
 
-          <div className="products-empty-state">
+        {error && (
+          <div className="product-alert product-alert-error">
 
-            <div className="empty-icon">
-              +
+            <span>⚠️</span>
+
+            <div>
+              <strong>
+                Something went wrong
+              </strong>
+
+              <p>{error}</p>
             </div>
 
-            <h3>
-              No products yet
-            </h3>
-
-            <p>
-              Your products will appear here once
-              you add your first listing.
-            </p>
-
           </div>
-
-        ) : (
-
-          <div className="products-management-grid">
-
-            {products.map((product) => (
-
-              <article
-                className="management-product-card"
-                key={product.id}
-              >
-
-                {/* IMAGE */}
-                <div className="management-product-image">
-
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                    />
-                  ) : (
-                    <div className="no-product-image">
-                      🖼️
-                    </div>
-                  )}
-
-                  <span
-                    className={
-                      product.is_available
-                        ? "product-status available"
-                        : "product-status unavailable"
-                    }
-                  >
-                    {product.is_available
-                      ? "Available"
-                      : "Unavailable"}
-                  </span>
-
-                </div>
-
-                {/* CONTENT */}
-                <div className="management-product-content">
-
-                  <div className="management-product-category">
-                    {product.category || "Product"}
-                  </div>
-
-                  <h3>
-                    {product.name}
-                  </h3>
-
-                  {product.description && (
-                    <p>
-                      {product.description}
-                    </p>
-                  )}
-
-                  <div className="management-product-bottom">
-
-                    {product.price !== null &&
-                    product.price !== undefined ? (
-                      <strong className="management-product-price">
-                        KSh{" "}
-                        {Number(
-                          product.price
-                        ).toLocaleString()}
-                      </strong>
-                    ) : (
-                      <span className="no-price">
-                        Price not set
-                      </span>
-                    )}
-
-                  </div>
-
-                  {/* ACTIONS */}
-                  <div className="management-product-actions">
-
-                    <button
-                      type="button"
-                      className="product-edit-button"
-                      onClick={() =>
-                        handleEdit(product)
-                      }
-                    >
-                      ✎ Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      className="product-delete-button"
-                      onClick={() =>
-                        handleDelete(product.id)
-                      }
-                    >
-                      Delete
-                    </button>
-
-                  </div>
-
-                </div>
-
-              </article>
-
-            ))}
-
-          </div>
-
         )}
 
-      </section>
+        {success && (
+          <div className="product-alert product-alert-success">
 
-    </div>
-  </main>
-);
+            <span>✓</span>
+
+            <div>
+              <strong>
+                Success
+              </strong>
+
+              <p>{success}</p>
+            </div>
+
+          </div>
+        )}
+
+        {/* FORM */}
+
+        <section className="product-form-card">
+
+          <div className="product-form-header">
+
+            <div>
+
+              <span className="form-section-label">
+                {editingId
+                  ? "UPDATE LISTING"
+                  : "NEW LISTING"}
+              </span>
+
+              <h2>
+                {editingId
+                  ? "Edit Product"
+                  : "Add New Product"}
+              </h2>
+
+              <p>
+                Add clear information and
+                a quality image to attract
+                customers.
+              </p>
+
+            </div>
+
+            <div className="product-form-icon">
+              {editingId
+                ? "✎"
+                : "+"}
+            </div>
+
+          </div>
+
+          <form
+            onSubmit={
+              handleSubmit
+            }
+          >
+
+            {/* BASIC INFORMATION */}
+
+            <div className="product-form-section">
+
+              <div className="form-section-title">
+
+                <span>01</span>
+
+                <div>
+
+                  <h3>
+                    Basic Information
+                  </h3>
+
+                  <p>
+                    Tell customers
+                    about your product.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="product-form-grid">
+
+                {/* NAME */}
+
+                <div className="form-field form-field-large">
+
+                  <label htmlFor="product-name">
+                    Product Name
+                    <span>*</span>
+                  </label>
+
+                  <input
+                    id="product-name"
+                    type="text"
+                    name="name"
+                    value={
+                      form.name
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    placeholder="e.g. Premium Mattress"
+                    required
+                  />
+
+                </div>
+
+                {/* CATEGORY */}
+
+                <div className="form-field">
+
+                  <label htmlFor="product-category">
+                    Category
+                  </label>
+
+                  <input
+                    id="product-category"
+                    type="text"
+                    name="category"
+                    value={
+                      form.category
+                    }
+                    onChange={
+                      handleChange
+                    }
+                    placeholder="e.g. Mattresses"
+                  />
+
+                </div>
+
+                {/* PRICE */}
+
+                <div className="form-field">
+
+                  <label htmlFor="product-price">
+                    Price
+                  </label>
+
+                  <div className="price-input">
+
+                    <span>KSh</span>
+
+                    <input
+                      id="product-price"
+                      type="number"
+                      name="price"
+                      value={
+                        form.price
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      placeholder="15,000"
+                      min="0"
+                      step="0.01"
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* DESCRIPTION */}
+
+              <div className="form-field product-description-field">
+
+                <label htmlFor="product-description">
+                  Description
+                </label>
+
+                <textarea
+                  id="product-description"
+                  name="description"
+                  value={
+                    form.description
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  placeholder="Describe your product, its features, benefits, size, materials, warranty..."
+                  rows="5"
+                />
+
+                <small>
+                  Give customers enough
+                  information to understand
+                  what you are offering.
+                </small>
+
+              </div>
+
+            </div>
+
+            {/* IMAGE SECTION */}
+
+            <div className="product-form-section">
+
+              <div className="form-section-title">
+
+                <span>02</span>
+
+                <div>
+
+                  <h3>
+                    Product Image
+                  </h3>
+
+                  <p>
+                    A good image makes
+                    your product stand out.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="product-upload-layout">
+
+                {/* UPLOAD BOX */}
+
+                <label
+                  htmlFor="product-image"
+                  className="product-upload-box"
+                >
+
+                  <input
+                    id="product-image"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={
+                      handleImageChange
+                    }
+                  />
+
+                  <div className="upload-icon">
+                    ↑
+                  </div>
+
+                  <strong>
+                    Click to upload product image
+                  </strong>
+
+                  <span>
+                    JPG, PNG, WEBP or GIF
+                  </span>
+
+                  <small>
+                    Images are automatically
+                    optimized before upload.
+                  </small>
+
+                </label>
+
+                {/* PREVIEW */}
+
+                <div className="product-preview-box">
+
+                  {imagePreview ? (
+                    <>
+                      <div className="preview-label">
+                        IMAGE PREVIEW
+                      </div>
+
+                      <div className="product-preview-image">
+
+                        <img
+                          src={
+                            imagePreview
+                          }
+                          alt="Product preview"
+                        />
+
+                      </div>
+                    </>
+                  ) : (
+                    <div className="preview-empty">
+
+                      <div>
+                        🖼️
+                      </div>
+
+                      <strong>
+                        No image selected
+                      </strong>
+
+                      <span>
+                        Your product preview
+                        will appear here.
+                      </span>
+
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+
+              <p className="upload-note">
+                Maximum upload size:
+                25 MB. Your image will
+                be compressed automatically.
+              </p>
+
+            </div>
+
+            {/* AVAILABILITY */}
+
+            <div className="product-form-section availability-section">
+
+              <div className="form-section-title">
+
+                <span>03</span>
+
+                <div>
+
+                  <h3>
+                    Product Availability
+                  </h3>
+
+                  <p>
+                    Control whether customers
+                    can see this product.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <label className="availability-toggle">
+
+                <input
+                  type="checkbox"
+                  id="isAvailable"
+                  name="isAvailable"
+                  checked={
+                    form.isAvailable
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+
+                <span className="toggle-slider"></span>
+
+                <div>
+
+                  <strong>
+                    Product is available
+                  </strong>
+
+                  <small>
+                    Customers can view this
+                    product on your public
+                    business page.
+                  </small>
+
+                </div>
+
+              </label>
+
+            </div>
+
+            {/* ACTIONS */}
+
+            <div className="product-form-actions">
+
+              <button
+                type="submit"
+                className="product-primary-button"
+                disabled={
+                  saving ||
+                  uploading
+                }
+              >
+
+                {uploading
+                  ? "↑ Uploading image..."
+                  : saving
+                  ? "Saving..."
+                  : editingId
+                  ? "✓ Update Product"
+                  : "+ Add Product"}
+
+              </button>
+
+              {editingId && (
+                <button
+                  type="button"
+                  className="product-secondary-button"
+                  onClick={
+                    resetForm
+                  }
+                >
+                  Cancel Edit
+                </button>
+              )}
+
+            </div>
+
+          </form>
+
+        </section>
+
+        {/* PRODUCTS */}
+
+        <section className="products-list-section">
+
+          <div className="products-list-header">
+
+            <div>
+
+              <span className="products-eyebrow">
+                YOUR INVENTORY
+              </span>
+
+              <h2>
+                Your Products
+              </h2>
+
+              <p>
+                Manage the products currently
+                listed for your business.
+              </p>
+
+            </div>
+
+            <div className="product-count">
+
+              <strong>
+                {products.length}
+              </strong>
+
+              <span>
+                {products.length === 1
+                  ? "Product"
+                  : "Products"}
+              </span>
+
+            </div>
+
+          </div>
+
+          {products.length === 0 ? (
+
+            <div className="products-empty-state">
+
+              <div className="empty-icon">
+                +
+              </div>
+
+              <h3>
+                No products yet
+              </h3>
+
+              <p>
+                Your products will appear
+                here once you add your
+                first listing.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="products-management-grid">
+
+              {products.map(
+                (product) => (
+
+                  <article
+                    className="management-product-card"
+                    key={
+                      product.id
+                    }
+                  >
+
+                    {/* IMAGE */}
+
+                    <div className="management-product-image">
+
+                      {product.image_url ? (
+
+                        <img
+                          src={
+                            product.image_url
+                          }
+                          alt={
+                            product.name
+                          }
+                        />
+
+                      ) : (
+
+                        <div className="no-product-image">
+                          🖼️
+                        </div>
+
+                      )}
+
+                      <span
+                        className={
+                          product.is_available
+                            ? "product-status available"
+                            : "product-status unavailable"
+                        }
+                      >
+                        {product.is_available
+                          ? "Available"
+                          : "Unavailable"}
+                      </span>
+
+                    </div>
+
+                    {/* CONTENT */}
+
+                    <div className="management-product-content">
+
+                      <div className="management-product-category">
+                        {product.category ||
+                          "Product"}
+                      </div>
+
+                      <h3>
+                        {product.name}
+                      </h3>
+
+                      {product.description && (
+                        <p>
+                          {
+                            product.description
+                          }
+                        </p>
+                      )}
+
+                      <div className="management-product-bottom">
+
+                        {product.price !==
+                          null &&
+                        product.price !==
+                          undefined ? (
+
+                          <strong className="management-product-price">
+
+                            KSh{" "}
+
+                            {Number(
+                              product.price
+                            ).toLocaleString()}
+
+                          </strong>
+
+                        ) : (
+
+                          <span className="no-price">
+                            Price not set
+                          </span>
+
+                        )}
+
+                      </div>
+
+                      {/* ACTIONS */}
+
+                      <div className="management-product-actions">
+
+                        <button
+                          type="button"
+                          className="product-edit-button"
+                          onClick={() =>
+                            handleEdit(
+                              product
+                            )
+                          }
+                        >
+                          ✎ Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="product-delete-button"
+                          onClick={() =>
+                            handleDelete(
+                              product.id
+                            )
+                          }
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  </article>
+
+                )
+              )}
+
+            </div>
+
+          )}
+
+        </section>
+
+      </div>
+
+    </main>
+  );
 }
 
 export default ManageProducts;
